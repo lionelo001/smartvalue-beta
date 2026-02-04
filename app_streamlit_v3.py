@@ -11,7 +11,6 @@ st.info("📱 Sur mobile : ouvre le menu des réglages en touchant la petite fl�
 # Bouton principal au centre (mobile-friendly)
 launch_sidebar = st.sidebar.button("🚀 Lancer le scan")
 launch_main = st.button("🚀 Lancer le scan", use_container_width=True)
-launch = launch_main or launch_sidebar
 with st.expander("ℹ️ Comment lire les résultats ?"):
     st.markdown("""
     **Score**
@@ -121,6 +120,7 @@ st.link_button(
     "📝 Donner mon avis (2 minutes)",
     "https://docs.google.com/forms/d/e/1FAIpQLSftKDyx2BZ0BnMgn6JOsDGYpNxK0YTqqKgXASrTlz2UfFwbvQ/viewform?usp=sharing&ouid=116329167308565311458"
 )
+
 
 
 
