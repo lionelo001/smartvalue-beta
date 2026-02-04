@@ -146,7 +146,7 @@ with tab_scan:
         )
     with c5:
         st.session_state.show_table = st.checkbox(
-            "Afficher aussi le tableau",
+            "Afficher aussi le tableau téléchargable",
             value=bool(st.session_state.show_table)
         )
 
@@ -250,3 +250,4 @@ with tab_feedback:
 # Footer
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
+
