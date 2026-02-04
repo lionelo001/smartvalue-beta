@@ -103,4 +103,17 @@ if run:
 
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
+st.divider()
+st.markdown("### 💬 Feedback (Version Bêta)")
+
+st.write(
+    "Ton avis m’aide énormément à améliorer SmartValue. "
+    "Ça prend 2 minutes 🙏"
+)
+
+st.link_button(
+    "📝 Donner mon avis (2 minutes)",
+    "https://docs.google.com/forms/d/e/1FAIpQLSftKDyx2BZ0BnMgn6JOsDGYpNxK0YTqqKgXASrTlz2UfFwbvQ/viewform?usp=sharing&ouid=116329167308565311458"
+)
+
 
