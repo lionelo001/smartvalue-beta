@@ -6,24 +6,31 @@ from scanner_core import SmartValueScanner, DEFAULT_UNIVERSE, SOFT_DISCLAIMER
 st.set_page_config(page_title="SmartValue Scanner (V3)", layout="wide")
 
 # ----------------------------
-# Session state init (mobile UX)
+# Session state init
 # ----------------------------
-if "scan_stage" not in st.session_state:
-    st.session_state.scan_stage = "idle"  # "idle" | "running"
-if "trigger_scan" not in st.session_state:
-    st.session_state.trigger_scan = False
-if "last_results" not in st.session_state:
-    st.session_state.last_results = None
-if "last_df" not in st.session_state:
-    st.session_state.last_df = None
-if "last_email_md" not in st.session_state:
-    st.session_state.last_email_md = None
-if "last_scanner" not in st.session_state:
-    st.session_state.last_scanner = None
-if "last_universe" not in st.session_state:
-    st.session_state.last_universe = None
-if "last_filters" not in st.session_state:
-    st.session_state.last_filters = None
+def _init_state():
+    defaults = {
+        # scan status
+        "scan_running": False,
+        "last_results": None,   # None = jamais scanné, [] = scan fait mais 0 résultats, list = résultats
+        "last_df": None,
+        "last_email_md": None,
+
+        # UI settings (persist across tabs)
+        "min_score": 35,
+        "min_conf": 50,
+        "chosen_sectors": list(DEFAULT_UNIVERSE.keys()),
+        "top_n": 15,
+        "show_table": True,
+
+        # helpers
+        "go_results_hint": False,  # show "go to results" hint after scan
+    }
+    for k, v in defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
+
+_init_state()
 
 # ----------------------------
 # Header + Help
@@ -51,93 +58,132 @@ with st.expander("📘 Aide rapide (clique ici) : Comment lire les résultats ?"
     """)
 
 st.info("🧪 Version BÊTA gratuite. L’objectif: tester, améliorer, et simplifier pour les investisseurs long terme. Vos retours sont les bienvenus 🙏")
-st.caption("Scanner value long terme: score, confiance data, tags, résumé, explication simple.")
-st.caption("📱 Sur mobile: les réglages sont dans le menu à gauche. Après avoir lancé le scan, ferme le menu pour voir les résultats.")
+st.caption("📱 Mobile-friendly: utilise les onglets **Scan / Résultats / Feedback** (en haut).")
 
 # ----------------------------
-# Sidebar controls
+# Top menu (tabs)
 # ----------------------------
-with st.sidebar:
-    st.header("⚙️ Réglages")
-
-    min_score = st.slider("Score minimum", 0, 100, 35, 1)
-    min_conf = st.slider("Confiance data minimum (%)", 0, 100, 50, 5)
-
-    sectors = list(DEFAULT_UNIVERSE.keys())
-    chosen = st.multiselect("Secteurs", sectors, default=sectors)
-
-    top_n = st.slider("Nombre d'actions affichées", 5, 50, 15, 1)
-    show_table = st.checkbox("Afficher aussi le tableau", value=True)
-
-    st.markdown("---")
-    st.subheader("🚀 Scan")
-
-    if st.session_state.scan_stage == "running":
-        st.info(
-            "⏳ Scan en cours…\n\n"
-            "📱 Sur mobile: ferme le menu (←) pour voir les résultats quand ça termine.",
-            icon="🔎"
-        )
-        run = False
-    else:
-        # Bouton normal: au clic -> on déclenche un scan et on rerun pour verrouiller l'UI
-        if st.button("🚀 Lancer le scan", use_container_width=True):
-            st.session_state.scan_stage = "running"
-            st.session_state.trigger_scan = True
-            st.rerun()
-        run = False  # on ne s'appuie pas sur run directement
+tab_scan, tab_results, tab_feedback = st.tabs(["🧠 Scan", "📊 Résultats", "💬 Feedback"])
 
 # ----------------------------
-# Trigger scan (runs after sidebar UI is updated)
+# Helpers
 # ----------------------------
-if st.session_state.scan_stage == "running" and st.session_state.trigger_scan:
-    # Reset trigger so it doesn't loop
-    st.session_state.trigger_scan = False
+def run_scan():
+    """Execute scan and store results in session_state."""
+    st.session_state.scan_running = True
+    st.session_state.go_results_hint = False
 
-    universe = {k: v for k, v in DEFAULT_UNIVERSE.items() if k in chosen}
+    universe = {
+        k: v for k, v in DEFAULT_UNIVERSE.items()
+        if k in st.session_state.chosen_sectors
+    }
     scanner = SmartValueScanner(universe)
 
-    # Store current config for reproducibility
-    st.session_state.last_universe = universe
-    st.session_state.last_filters = {
-        "min_score": min_score,
-        "min_conf": min_conf,
-        "chosen": chosen,
-        "top_n": top_n,
-        "show_table": show_table,
-    }
+    with st.spinner("🔎 Analyse en cours..."):
+        results = scanner.scan(
+            min_score=st.session_state.min_score,
+            min_confidence=st.session_state.min_conf
+        )
 
-    with st.spinner("Analyse en cours..."):
-        results = scanner.scan(min_score=min_score, min_confidence=min_conf)
-
-    # Done scanning
-    st.session_state.scan_stage = "idle"
-    st.session_state.last_scanner = scanner
-    st.session_state.last_results = results
-
+    # Store
     if not results:
+        st.session_state.last_results = []
         st.session_state.last_df = None
         st.session_state.last_email_md = None
     else:
-        df = pd.DataFrame(results).sort_values("Score", ascending=False).reset_index(drop=True)
+        df = (
+            pd.DataFrame(results)
+            .sort_values("Score", ascending=False)
+            .reset_index(drop=True)
+        )
+        st.session_state.last_results = results
         st.session_state.last_df = df
         st.session_state.last_email_md = scanner.to_email_markdown(results, top_n=5)
 
-    # Re-run once to refresh UI with results (and sidebar unlocked)
-    st.rerun()
+    st.session_state.scan_running = False
+    st.session_state.go_results_hint = True
+
 
 # ----------------------------
-# Display results (from session)
+# TAB 1: Scan
 # ----------------------------
-results = st.session_state.last_results
-df = st.session_state.last_df
-email_md = st.session_state.last_email_md
-scanner = st.session_state.last_scanner
+with tab_scan:
+    st.subheader("⚙️ Réglages du scan")
 
-if results is not None:
-    if not results:
-        st.error("Aucune opportunité ne passe les filtres actuels.")
-        st.info(SOFT_DISCLAIMER)
+    c1, c2, c3 = st.columns([1, 1, 2])
+
+    with c1:
+        st.session_state.min_score = st.slider(
+            "Score minimum",
+            0, 100,
+            int(st.session_state.min_score),
+            1
+        )
+
+    with c2:
+        st.session_state.min_conf = st.slider(
+            "Confiance data minimum (%)",
+            0, 100,
+            int(st.session_state.min_conf),
+            5
+        )
+
+    with c3:
+        sectors = list(DEFAULT_UNIVERSE.keys())
+        st.session_state.chosen_sectors = st.multiselect(
+            "Secteurs",
+            sectors,
+            default=st.session_state.chosen_sectors
+        )
+
+    c4, c5 = st.columns([1, 1])
+    with c4:
+        st.session_state.top_n = st.slider(
+            "Nombre d'actions affichées",
+            5, 50,
+            int(st.session_state.top_n),
+            1
+        )
+    with c5:
+        st.session_state.show_table = st.checkbox(
+            "Afficher aussi le tableau",
+            value=bool(st.session_state.show_table)
+        )
+
+    st.markdown("### 🚀 Lancer")
+
+    # Button disabled while scanning (prevents double clicks)
+    if st.session_state.scan_running:
+        st.info("⏳ Scan en cours… tu peux ensuite aller dans l’onglet **📊 Résultats**.", icon="🔎")
+        st.button("🚀 Lancer le scan", use_container_width=True, disabled=True)
+    else:
+        if st.button("🚀 Lancer le scan", use_container_width=True):
+            run_scan()
+            # optional: rerun to refresh UI hints immediately
+            st.rerun()
+
+    # After scan: show a clear call to action
+    if st.session_state.go_results_hint:
+        if st.session_state.last_results == []:
+            st.warning("Scan terminé ✅ Aucune opportunité ne passe les filtres. Essaie de baisser le score minimum ou la confiance.")
+        else:
+            best = st.session_state.last_df["Score"].max()
+            st.success(f"Scan terminé ✅ Opportunités: {len(st.session_state.last_df)} | Meilleur score: {best:.1f}/100")
+
+        st.info("👉 Maintenant ouvre l’onglet **📊 Résultats** (en haut) pour voir les cartes et le top 5 email-ready.")
+
+# ----------------------------
+# TAB 2: Results
+# ----------------------------
+with tab_results:
+    results = st.session_state.last_results
+    df = st.session_state.last_df
+    email_md = st.session_state.last_email_md
+
+    if results is None:
+        st.info("Lance d’abord un scan dans l’onglet **🧠 Scan**.")
+    elif results == []:
+        st.warning("Aucune opportunité détectée avec les filtres actuels. Essaie d’ajuster les réglages dans l’onglet **🧠 Scan**.")
     else:
         st.success(
             f"Opportunités: {len(df)} | "
@@ -146,7 +192,7 @@ if results is not None:
         )
 
         st.subheader("🧩 Vue Cartes (plus lisible)")
-        for r in results[:top_n]:
+        for r in results[: st.session_state.top_n]:
             col1, col2 = st.columns([3, 2])
 
             with col1:
@@ -172,28 +218,35 @@ if results is not None:
         st.code(email_md if email_md else "", language="markdown")
 
         csv_bytes = df.to_csv(index=False).encode("utf-8")
-        st.download_button("⬇️ Télécharger CSV", data=csv_bytes, file_name="smartvalue_results_v3.csv", mime="text/csv")
+        st.download_button(
+            "⬇️ Télécharger CSV",
+            data=csv_bytes,
+            file_name="smartvalue_results_v3.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
 
-        if show_table:
+        if st.session_state.show_table:
             st.subheader("📊 Tableau (comparaison rapide)")
             cols = [
                 "Score", "Confiance %", "Ticker", "Société", "Secteur", "Prix", "Devise",
                 "PER", "P/B", "EV/EBITDA", "ROE %", "Marge %", "Dette/Equity",
                 "Div %", "Croissance CA %", "Tags", "Résumé", "Pourquoi"
             ]
-            st.dataframe(df[cols].head(top_n), use_container_width=True)
+            st.dataframe(df[cols].head(st.session_state.top_n), use_container_width=True)
 
 # ----------------------------
-# Footer + disclaimer + feedback
+# TAB 3: Feedback
 # ----------------------------
+with tab_feedback:
+    st.subheader("💬 Feedback (Version Bêta)")
+    st.write("Ton avis m’aide énormément à améliorer SmartValue. Ça prend 2 minutes 🙏")
+
+    st.link_button(
+        "📝 Donner mon avis (2 minutes)",
+        "https://docs.google.com/forms/d/e/1FAIpQLSftKDyx2BZ0BnMgn6JOsDGYpNxK0YTqqKgXASrTlz2UfFwbvQ/viewform?usp=sharing&ouid=116329167308565311458"
+    )
+
+# Footer
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
-
-st.divider()
-st.markdown("### 💬 Feedback (Version Bêta)")
-st.write("Ton avis m’aide énormément à améliorer SmartValue. Ça prend 2 minutes 🙏")
-
-st.link_button(
-    "📝 Donner mon avis (2 minutes)",
-    "https://docs.google.com/forms/d/e/1FAIpQLSftKDyx2BZ0BnMgn6JOsDGYpNxK0YTqqKgXASrTlz2UfFwbvQ/viewform?usp=sharing&ouid=116329167308565311458"
-)
