@@ -6,7 +6,6 @@ from scanner_core import SmartValueScanner, DEFAULT_UNIVERSE, SOFT_DISCLAIMER
 st.set_page_config(page_title="SmartValue Scanner (V3)", layout="wide")
 
 st.title("🔎 SmartValue Scanner (V3)")
-launch_main = st.button("🚀 Lancer le scan", use_container_width=True)
 with st.expander("ℹ️ Comment lire les résultats ?"):
     st.markdown("""
     **Score**
@@ -116,6 +115,7 @@ st.link_button(
     "📝 Donner mon avis (2 minutes)",
     "https://docs.google.com/forms/d/e/1FAIpQLSftKDyx2BZ0BnMgn6JOsDGYpNxK0YTqqKgXASrTlz2UfFwbvQ/viewform?usp=sharing&ouid=116329167308565311458"
 )
+
 
 
 
