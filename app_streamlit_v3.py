@@ -6,25 +6,25 @@ from scanner_core import SmartValueScanner, DEFAULT_UNIVERSE, SOFT_DISCLAIMER
 st.set_page_config(page_title="SmartValue Scanner (V3)", layout="wide")
 
 st.title("🔎 SmartValue Scanner (V3)")
-with st.expander("ℹ️ Comment lire les résultats ?"):
+st.caption("👀 Nouveau ? Clique juste ici pour une explication rapide 👇")
+
+with st.expander("📘 Aide rapide (clique ici) : Comment lire les résultats ?"):
     st.markdown("""
     **Score**
-    - Le score synthétise plusieurs critères (valorisation, rentabilité, solidité financière, croissance).
-    - Plus le score est élevé, plus l'entreprise ressort comme intéressante selon ces critères.
+    - Synthèse de plusieurs critères (valorisation, rentabilité, solidité, croissance).
+    - Plus il est élevé, plus l’entreprise ressort selon ces critères.
     - Ce n’est **pas** un signal d’achat.
 
     **Confiance des données**
-    - Indique la fiabilité et la complétude des données utilisées.
-    - Une confiance élevée signifie que les données sont cohérentes et exploitables.
-    - Une confiance plus basse invite simplement à plus de prudence.
+    - Indique la fiabilité / complétude des données.
+    - Plus c’est haut, plus c’est cohérent.
+    - Plus bas = à vérifier davantage.
 
     **Tags**
-    - Les tags résument le profil de l’entreprise (VALUE, QUALITY, SAFE, GROWTH, DIVIDEND…).
-    - Ils servent à comprendre rapidement **pourquoi** l’entreprise ressort.
+    - Résument le profil (VALUE, QUALITY, SAFE, GROWTH, DIVIDEND…).
 
     **Important**
-    - Ces résultats sont des aides à la réflexion.
-    - Ils ne remplacent jamais une analyse personnelle complète.
+    - Résultats indicatifs, à compléter avec vos recherches.
     """)
 
 st.info("🧪 Version BÊTA gratuite. L’objectif: tester, améliorer, et simplifier pour les investisseurs long terme. Vos retours sont les bienvenus 🙏")
@@ -115,6 +115,7 @@ st.link_button(
     "📝 Donner mon avis (2 minutes)",
     "https://docs.google.com/forms/d/e/1FAIpQLSftKDyx2BZ0BnMgn6JOsDGYpNxK0YTqqKgXASrTlz2UfFwbvQ/viewform?usp=sharing&ouid=116329167308565311458"
 )
+
 
 
 
