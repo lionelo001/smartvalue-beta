@@ -121,13 +121,21 @@ with tab_scan:
     with b1:
         if st.button("✅ Tous", use_container_width=True):
             st.session_state.chosen_sectors = sectors.copy()
+            # sync checkbox states
+            for sec in sectors:
+                st.session_state[f"sector_{sec}"] = True
     with b2:
         if st.button("❌ Aucun", use_container_width=True):
             st.session_state.chosen_sectors = []
+            for sec in sectors:
+                st.session_state[f"sector_{sec}"] = False
     with b3:
         if st.button("🔁 Inverser", use_container_width=True):
             current = set(st.session_state.chosen_sectors)
-            st.session_state.chosen_sectors = [s for s in sectors if s not in current]
+            new_sel = [s for s in sectors if s not in current]
+            st.session_state.chosen_sectors = new_sel
+            for sec in sectors:
+                st.session_state[f"sector_{sec}"] = (sec in new_sel)
 
     st.divider()
 
@@ -138,11 +146,13 @@ with tab_scan:
         col = cols[i % 3]
         key = f"sector_{sec}"
 
+        # init state only once
         if key not in st.session_state:
             st.session_state[key] = sec in st.session_state.chosen_sectors
 
         with col:
-            st.session_state[key] = st.checkbox(sec, value=st.session_state[key], key=key)
+            # ✅ IMPORTANT: no "value=" here, to avoid the warning
+            st.checkbox(sec, key=key)
 
         if st.session_state[key]:
             selected.append(sec)
