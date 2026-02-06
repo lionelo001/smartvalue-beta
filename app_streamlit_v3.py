@@ -47,6 +47,7 @@ def init_state():
         "chosen_sectors": list(DEFAULT_UNIVERSE.keys()),
         "top_n": 15,
         "show_table": True,
+
         "last_results": None,
         "last_df": None,
         "last_email_md": None,
@@ -92,30 +93,31 @@ tab_scan, tab_results, tab_feedback = st.tabs(["🧠 Scan", "📊 Résultats", "
 with tab_scan:
     st.subheader("⚙️ Réglages")
 
+    # ✅ IMPORTANT: sliders write directly to session_state using key=
     c1, c2, c3 = st.columns([1, 1, 1])
 
     with c1:
-        st.session_state.min_score = st.slider(
+        st.slider(
             "Score minimum",
             0, 100,
-            int(st.session_state.min_score),
-            1
+            step=1,
+            key="min_score"
         )
 
     with c2:
-        st.session_state.min_conf = st.slider(
+        st.slider(
             "Confiance data minimum (%)",
             0, 100,
-            int(st.session_state.min_conf),
-            5
+            step=5,
+            key="min_conf"
         )
 
     with c3:
         st.write(" ")
         st.write(" ")
         if st.button("⚡ Recommandé", use_container_width=True):
-            st.session_state.min_score = 40
-            st.session_state.min_conf = 70
+            st.session_state["min_score"] = 40
+            st.session_state["min_conf"] = 70
             st.rerun()
         st.caption("Recommandé = bon équilibre qualité / opportunités.")
 
@@ -131,11 +133,15 @@ with tab_scan:
             st.session_state.chosen_sectors = sectors.copy()
             for sec in sectors:
                 st.session_state[f"sector_{sec}"] = True
+            st.rerun()
+
     with b2:
         if st.button("❌ Aucun", use_container_width=True):
             st.session_state.chosen_sectors = []
             for sec in sectors:
                 st.session_state[f"sector_{sec}"] = False
+            st.rerun()
+
     with b3:
         if st.button("🔁 Inverser", use_container_width=True):
             current = set(st.session_state.chosen_sectors)
@@ -143,6 +149,7 @@ with tab_scan:
             st.session_state.chosen_sectors = new_sel
             for sec in sectors:
                 st.session_state[f"sector_{sec}"] = (sec in new_sel)
+            st.rerun()
 
     st.divider()
 
@@ -166,16 +173,16 @@ with tab_scan:
 
     st.divider()
 
-    st.session_state.top_n = st.slider(
+    st.slider(
         "Nombre d’actions affichées",
         5, 50,
-        int(st.session_state.top_n),
-        1
+        step=1,
+        key="top_n"
     )
 
-    st.session_state.show_table = st.checkbox(
+    st.checkbox(
         "Afficher aussi le tableau comparatif",
-        value=st.session_state.show_table
+        key="show_table"
     )
 
     st.divider()
@@ -190,8 +197,8 @@ with tab_scan:
 
         with st.spinner("Analyse en cours..."):
             results = scanner.scan(
-                min_score=st.session_state.min_score,
-                min_confidence=st.session_state.min_conf
+                min_score=st.session_state["min_score"],
+                min_confidence=st.session_state["min_conf"]
             )
 
         st.session_state.scan_done = True
@@ -231,7 +238,7 @@ with tab_results:
         )
 
         st.subheader("🧩 Vue Cartes")
-        for r in results[: st.session_state.top_n]:
+        for r in results[: int(st.session_state["top_n"])]:
             col1, col2 = st.columns([3, 2])
 
             with col1:
@@ -263,7 +270,7 @@ with tab_results:
             use_container_width=True
         )
 
-        if st.session_state.show_table:
+        if st.session_state["show_table"]:
             st.subheader("📊 Tableau comparatif")
             st.dataframe(df, use_container_width=True)
 
