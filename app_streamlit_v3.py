@@ -210,7 +210,7 @@ with tab_scan:
                 results, top_n=5
             )
 
-        st.success("Scan terminé ✅ → ouvre l’onglet en haut **📊 Résultats**")
+        st.success("Scan terminé ✅ → ouvre l’onglet **📊 Résultats** en haut")
 
 # =====================================================
 # TAB RESULTATS
@@ -322,3 +322,4 @@ with tab_feedback:
 # =====================================================
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
+
