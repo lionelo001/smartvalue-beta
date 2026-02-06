@@ -51,7 +51,7 @@ if st.session_state["apply_recommended"]:
 # HEADER
 # =====================================================
 st.title("🔎 SmartValue Scanner d’Actions (V3)")
-st.caption("Un scanner pour repérer des actions à creuser (long terme), avec explication du pourquoi. Pas du trading, pas une recommandation.")
+st.caption("Un scanner pour repérer des actions à creuser (long terme), avec explication du pourquoi.")
 
 st.info("🧪 Version BÊTA gratuite — vos retours aident directement à améliorer l’outil.")
 
@@ -312,3 +312,4 @@ else:
 # =====================================================
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
+
