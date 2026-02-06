@@ -52,12 +52,21 @@ def init_state():
         "last_df": None,
         "last_email_md": None,
         "scan_done": False,
+
+        # ✅ flag to apply presets safely
+        "apply_recommended": False,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
 
 init_state()
+
+# ✅ Apply recommended BEFORE widgets are created (safe)
+if st.session_state.get("apply_recommended"):
+    st.session_state["min_score"] = 40
+    st.session_state["min_conf"] = 70
+    st.session_state["apply_recommended"] = False
 
 # =====================================================
 # HEADER
@@ -93,7 +102,6 @@ tab_scan, tab_results, tab_feedback = st.tabs(["🧠 Scan", "📊 Résultats", "
 with tab_scan:
     st.subheader("⚙️ Réglages")
 
-    # ✅ IMPORTANT: sliders write directly to session_state using key=
     c1, c2, c3 = st.columns([1, 1, 1])
 
     with c1:
@@ -116,8 +124,8 @@ with tab_scan:
         st.write(" ")
         st.write(" ")
         if st.button("⚡ Recommandé", use_container_width=True):
-            st.session_state["min_score"] = 40
-            st.session_state["min_conf"] = 70
+            # ✅ set a flag, then rerun; preset applied at top safely
+            st.session_state["apply_recommended"] = True
             st.rerun()
         st.caption("Recommandé = bon équilibre qualité / opportunités.")
 
