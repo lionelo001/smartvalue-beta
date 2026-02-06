@@ -25,11 +25,9 @@ button[data-testid="stTab"] {
     border: 1px solid rgba(255,255,255,0.10) !important;
     transition: all 0.15s ease-in-out !important;
 }
-
 button[data-testid="stTab"]:hover {
     background: rgba(255,255,255,0.10) !important;
 }
-
 button[data-testid="stTab"][aria-selected="true"] {
     background: rgba(14,165,233,0.16) !important;
     border: 1px solid rgba(14,165,233,0.40) !important;
@@ -94,7 +92,8 @@ tab_scan, tab_results, tab_feedback = st.tabs(["🧠 Scan", "📊 Résultats", "
 with tab_scan:
     st.subheader("⚙️ Réglages")
 
-    c1, c2 = st.columns(2)
+    c1, c2, c3 = st.columns([1, 1, 1])
+
     with c1:
         st.session_state.min_score = st.slider(
             "Score minimum",
@@ -102,6 +101,7 @@ with tab_scan:
             int(st.session_state.min_score),
             1
         )
+
     with c2:
         st.session_state.min_conf = st.slider(
             "Confiance data minimum (%)",
@@ -110,18 +110,25 @@ with tab_scan:
             5
         )
 
+    with c3:
+        st.write(" ")
+        st.write(" ")
+        if st.button("⚡ Recommandé", use_container_width=True):
+            st.session_state.min_score = 40
+            st.session_state.min_conf = 70
+            st.rerun()
+        st.caption("Recommandé = bon équilibre qualité / opportunités.")
+
     st.divider()
 
     # -------- Secteurs (boutons visibles) --------
     st.subheader("🏭 Secteurs")
-
     sectors = list(DEFAULT_UNIVERSE.keys())
 
     b1, b2, b3 = st.columns(3)
     with b1:
         if st.button("✅ Tous", use_container_width=True):
             st.session_state.chosen_sectors = sectors.copy()
-            # sync checkbox states
             for sec in sectors:
                 st.session_state[f"sector_{sec}"] = True
     with b2:
@@ -146,12 +153,10 @@ with tab_scan:
         col = cols[i % 3]
         key = f"sector_{sec}"
 
-        # init state only once
         if key not in st.session_state:
             st.session_state[key] = sec in st.session_state.chosen_sectors
 
         with col:
-            # ✅ IMPORTANT: no "value=" here, to avoid the warning
             st.checkbox(sec, key=key)
 
         if st.session_state[key]:
