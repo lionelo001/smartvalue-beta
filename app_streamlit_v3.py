@@ -176,7 +176,7 @@ with tab_scan:
         )
 
     with c3:
-        sectors = list(DEFAULT_UNIVERSE.keys())
+ sectors = list(DEFAULT_UNIVERSE.keys())
 
 st.write("**Secteurs (clique pour activer/désactiver)**")
 
@@ -342,6 +342,7 @@ with tab_feedback:
 # Footer
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
+
 
 
 
