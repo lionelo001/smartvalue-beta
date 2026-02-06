@@ -6,21 +6,48 @@ from scanner_core import SmartValueScanner, DEFAULT_UNIVERSE, SOFT_DISCLAIMER
 st.set_page_config(page_title="SmartValue Scanner (V3)", layout="wide")
 st.markdown("""
 <style>
-/* Cibler les onglets Streamlit (nouvelle structure) */
+/* Conteneur des onglets: un peu d'air */
+div[data-testid="stTabs"] {
+    margin-top: 0.5rem;
+}
+
+/* Style de base des onglets */
 button[data-testid="stTab"] {
     font-size: 18px !important;
-    padding: 14px 26px !important;
-    font-weight: 600 !important;
+    padding: 12px 18px !important;
+    font-weight: 650 !important;
+    border-radius: 12px !important;
+    margin-right: 6px !important;
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.10) !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+/* Hover (au survol, surtout desktop) */
+button[data-testid="stTab"]:hover {
+    background: rgba(255,255,255,0.10) !important;
+    transform: translateY(-1px);
 }
 
 /* Onglet actif */
 button[data-testid="stTab"][aria-selected="true"] {
-    border-bottom: 4px solid #0ea5e9 !important;
+    background: rgba(14,165,233,0.16) !important;
+    border: 1px solid rgba(14,165,233,0.40) !important;
     color: #0ea5e9 !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.18) !important;
+}
+
+/* Petit underline propre (optionnel, mais ça aide à la lisibilité) */
+button[data-testid="stTab"][aria-selected="true"]::after {
+    content: "";
+    display: block;
+    height: 3px;
+    border-radius: 999px;
+    margin-top: 6px;
+    background: rgba(14,165,233,0.9);
 }
 </style>
 """, unsafe_allow_html=True)
-
 
 
 GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSftKDyx2BZ0BnMgn6JOsDGYpNxK0YTqqKgXASrTlz2UfFwbvQ/viewform?usp=sharing&ouid=116329167308565311458"
@@ -286,5 +313,6 @@ with tab_feedback:
 # Footer
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
+
 
 
