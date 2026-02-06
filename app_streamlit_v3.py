@@ -7,7 +7,7 @@ from scanner_core import SmartValueScanner, DEFAULT_UNIVERSE, SOFT_DISCLAIMER
 # CONFIG APP
 # =====================================================
 st.set_page_config(
-    page_title="SmartValue Scanner d'actions (V3)",
+    page_title="SmartValue Scanner d’Actions (V3)",
     layout="wide"
 )
 
@@ -49,7 +49,7 @@ if st.session_state["apply_recommended"]:
 # =====================================================
 # HEADER
 # =====================================================
-st.title("🔎 SmartValue Scanner (V3)")
+st.title("🔎 SmartValue Scanner d’Actions (V3)")
 st.caption("Scanner value long terme — aide à la réflexion, pas une recommandation.")
 
 with st.expander("📘 Aide rapide : Comment lire les résultats ?"):
@@ -210,7 +210,7 @@ with tab_scan:
                 results, top_n=5
             )
 
-        st.success("Scan terminé ✅ → ouvre l’onglet **📊 Résultats**")
+        st.success("Scan terminé ✅ → ouvre l’onglet en haut **📊 Résultats**")
 
 # =====================================================
 # TAB RESULTATS
@@ -221,6 +221,16 @@ with tab_results:
 
     elif st.session_state["last_results"] == []:
         st.warning("Aucune opportunité ne correspond aux filtres actuels.")
+
+        # Feedback visible même si aucun résultat
+        st.divider()
+        st.subheader("💬 Feedback (Bêta)")
+        st.write("Ton avis m’aide énormément à améliorer SmartValue.")
+        st.link_button(
+            "📝 Donner mon avis (2 minutes)",
+            GOOGLE_FORM_URL,
+            use_container_width=True,
+        )
 
     else:
         df = st.session_state["last_df"]
@@ -267,9 +277,7 @@ with tab_results:
                     language="markdown",
                 )
             else:
-                st.info(
-                    "Lance un scan pour générer un exemple d’email."
-                )
+                st.info("Lance un scan pour générer un exemple d’email.")
 
         csv_bytes = df.to_csv(index=False).encode("utf-8")
         st.download_button(
@@ -283,6 +291,19 @@ with tab_results:
         if st.session_state["show_table"]:
             with st.expander("📊 Tableau comparatif"):
                 st.dataframe(df, use_container_width=True)
+
+        # ✅ Feedback visible à la fin du scan (comme demandé)
+        st.divider()
+        st.subheader("💬 Feedback (Bêta)")
+        st.write(
+            "Si tu as 2 minutes: ce qui est clair / pas clair, ce qui manque, "
+            "ce que tu aimerais recevoir chaque semaine… ça m’aide énormément 🙏"
+        )
+        st.link_button(
+            "📝 Donner mon avis (2 minutes)",
+            GOOGLE_FORM_URL,
+            use_container_width=True,
+        )
 
 # =====================================================
 # TAB FEEDBACK
@@ -301,4 +322,3 @@ with tab_feedback:
 # =====================================================
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
-
