@@ -7,7 +7,7 @@ from scanner_core import SmartValueScanner, DEFAULT_UNIVERSE, SOFT_DISCLAIMER
 # CONFIG APP
 # =====================================================
 st.set_page_config(
-    page_title="SmartValue Scanner (V3)",
+    page_title="SmartValue Scanner d'actions (V3)",
     layout="wide"
 )
 
@@ -301,3 +301,4 @@ with tab_feedback:
 # =====================================================
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
+
