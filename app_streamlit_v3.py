@@ -177,11 +177,40 @@ with tab_scan:
 
     with c3:
         sectors = list(DEFAULT_UNIVERSE.keys())
-        st.session_state.chosen_sectors = st.multiselect(
-            "Secteurs",
-            sectors,
-            default=st.session_state.chosen_sectors
-        )
+
+st.write("**Secteurs (clique pour activer/désactiver)**")
+
+# Boutons rapides
+b1, b2, b3 = st.columns([1, 1, 1])
+with b1:
+    if st.button("✅ Tous", use_container_width=True):
+        st.session_state.chosen_sectors = sectors
+with b2:
+    if st.button("❌ Aucun", use_container_width=True):
+        st.session_state.chosen_sectors = []
+with b3:
+    if st.button("🔁 Inverser", use_container_width=True):
+        current = set(st.session_state.chosen_sectors)
+        st.session_state.chosen_sectors = [s for s in sectors if s not in current]
+
+st.divider()
+
+# Grille de cases (chips-like)
+cols = st.columns(3)  # mets 2 si tu veux plus gros sur mobile
+chosen = set(st.session_state.chosen_sectors)
+
+for i, sec in enumerate(sectors):
+    col = cols[i % 3]
+    key = f"sec_{sec}"
+    # état initial
+    if key not in st.session_state:
+        st.session_state[key] = (sec in chosen)
+
+    with col:
+        st.session_state[key] = st.checkbox(sec, value=st.session_state[key], key=key)
+
+# reconstruire la liste choisie
+st.session_state.chosen_sectors = [sec for sec in sectors if st.session_state.get(f"sec_{sec}", False)]
 
     c4, c5 = st.columns([1, 1])
     with c4:
@@ -313,6 +342,7 @@ with tab_feedback:
 # Footer
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
+
 
 
 
