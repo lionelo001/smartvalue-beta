@@ -248,6 +248,23 @@ with tab_results:
         st.subheader("🧩 Vue Cartes")
         for r in results[: int(st.session_state["top_n"])]:
             col1, col2 = st.columns([3, 2])
+# =====================================================
+# EMAIL TYPE (APERÇU)
+# =====================================================
+st.divider()
+
+with st.expander("📩 Voir un exemple d’email hebdomadaire (Top 5)"):
+    st.caption(
+        "Aperçu du format d’email que tu pourrais recevoir chaque semaine. "
+        "Contenu basé sur les résultats du dernier scan."
+    )
+
+    if st.session_state.last_results and st.session_state.last_results != []:
+        st.code(st.session_state.last_email_md, language="markdown")
+    else:
+        st.info(
+            "Lance un scan pour générer un exemple d’email basé sur les résultats."
+        )
 
             with col1:
                 st.markdown(f"### {r['Score badge']} {r['Ticker']} – {r['Société']}")
@@ -313,4 +330,5 @@ with tab_feedback:
 # =====================================================
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
+
 
