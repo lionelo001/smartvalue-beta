@@ -6,20 +6,21 @@ from scanner_core import SmartValueScanner, DEFAULT_UNIVERSE, SOFT_DISCLAIMER
 st.set_page_config(page_title="SmartValue Scanner (V3)", layout="wide")
 st.markdown("""
 <style>
-/* Agrandir les onglets */
-div[data-baseweb="tab"] > button {
-    font-size: 18px;
-    padding: 12px 24px;
-    font-weight: 600;
+/* Cibler les onglets Streamlit (nouvelle structure) */
+button[data-testid="stTab"] {
+    font-size: 18px !important;
+    padding: 14px 26px !important;
+    font-weight: 600 !important;
 }
 
 /* Onglet actif */
-div[data-baseweb="tab"] > button[aria-selected="true"] {
-    color: #0ea5e9;
-    border-bottom: 3px solid #0ea5e9;
+button[data-testid="stTab"][aria-selected="true"] {
+    border-bottom: 4px solid #0ea5e9 !important;
+    color: #0ea5e9 !important;
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 
 GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSftKDyx2BZ0BnMgn6JOsDGYpNxK0YTqqKgXASrTlz2UfFwbvQ/viewform?usp=sharing&ouid=116329167308565311458"
@@ -285,4 +286,5 @@ with tab_feedback:
 # Footer
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
+
 
