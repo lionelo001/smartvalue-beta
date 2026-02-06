@@ -5,6 +5,8 @@ from scanner_core import SmartValueScanner, DEFAULT_UNIVERSE, SOFT_DISCLAIMER
 
 st.set_page_config(page_title="SmartValue Scanner (V3)", layout="wide")
 
+GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSftKDyx2BZ0BnMgn6JOsDGYpNxK0YTqqKgXASrTlz2UfFwbvQ/viewform?usp=sharing&ouid=116329167308565311458"
+
 # ----------------------------
 # Session state init
 # ----------------------------
@@ -146,7 +148,7 @@ with tab_scan:
         )
     with c5:
         st.session_state.show_table = st.checkbox(
-            "Afficher aussi le tableau téléchargable",
+            "Afficher aussi le tableau",
             value=bool(st.session_state.show_table)
         )
 
@@ -159,7 +161,6 @@ with tab_scan:
     else:
         if st.button("🚀 Lancer le scan", use_container_width=True):
             run_scan()
-            # optional: rerun to refresh UI hints immediately
             st.rerun()
 
     # After scan: show a clear call to action
@@ -235,6 +236,22 @@ with tab_results:
             ]
             st.dataframe(df[cols].head(st.session_state.top_n), use_container_width=True)
 
+    # ✅ Feedback CTA visible uniquement après un scan (même si 0 résultat)
+    if results is not None:
+        st.divider()
+        st.markdown("### 💬 Ton avis compte vraiment")
+        st.info(
+            "SmartValue est en version bêta. "
+            "Si tu as une remarque, une incompréhension ou une idée d’amélioration, "
+            "ton retour m’aide énormément 🙏"
+        )
+        st.caption("Même 1 phrase, c’est déjà précieux.")
+        st.link_button(
+            "📝 Donner mon avis (2 minutes)",
+            GOOGLE_FORM_URL,
+            use_container_width=True
+        )
+
 # ----------------------------
 # TAB 3: Feedback
 # ----------------------------
@@ -244,10 +261,10 @@ with tab_feedback:
 
     st.link_button(
         "📝 Donner mon avis (2 minutes)",
-        "https://docs.google.com/forms/d/e/1FAIpQLSftKDyx2BZ0BnMgn6JOsDGYpNxK0YTqqKgXASrTlz2UfFwbvQ/viewform?usp=sharing&ouid=116329167308565311458"
+        GOOGLE_FORM_URL,
+        use_container_width=True
     )
 
 # Footer
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
-
