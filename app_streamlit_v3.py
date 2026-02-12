@@ -1,7 +1,7 @@
 # app_streamlit_v3.py
 # SmartValue Scanner d’Actions (V3) - One Page (no sidebar)
 # Email preview + table are collapsible (expanders)
-# Recommended is stricter (min_score=40, min_conf=70)
+# Recommended stricter (min_score=40, min_conf=70)
 # GA4 tracking via Measurement Protocol (reliable on Streamlit)
 
 from __future__ import annotations
@@ -120,16 +120,12 @@ init_state()
 # HEADER
 # =====================================================
 st.title("🔎 SmartValue Scanner d’Actions (V3)")
-st.caption("Scanner value long terme : score, confiance data, tags, résumé, explication simple.")
 
-top_left, top_right = st.columns([3, 1], gap="large")
-with top_left:
-    st.info(
-        "🧪 Version BÊTA gratuite. Objectif : tester, améliorer, simplifier pour les investisseurs long terme. "
-        "Vos retours sont précieux 🙏"
-    )
-with top_right:
-    st.link_button("📝 Feedback (2 min)", FEEDBACK_URL, use_container_width=True)
+st.info(
+    "🧪 Version BÊTA gratuite. Objectif : tester, améliorer, et simplifier pour les investisseurs long terme. "
+    "Vos retours seront utiles pour la suite 🙏"
+)
+
 
 # =====================================================
 # HELP + LEXICON
@@ -158,13 +154,13 @@ with st.expander("📘 Aide rapide : Comment lire les résultats ?"):
 with st.expander("📚 Lexique (abréviations)"):
     st.markdown(
         """
-- **PER (P/E)** : prix / bénéfices. Plus bas = potentiellement moins cher, mais dépend du secteur.
-- **P/B** : prix / valeur comptable. Utile pour banques, industrielles, etc.
-- **EV/EBITDA** : valorisation vs profit opérationnel. Souvent utile pour comparer des entreprises.
-- **ROE** : rentabilité des capitaux propres. Plus haut = business efficace (à contextualiser).
-- **Marge %** : profitabilité (selon données dispo).
-- **Dette/Equity** : dette relative aux capitaux propres. Plus bas = bilan plus sain.
-- **Croissance CA %** : évolution du chiffre d’affaires (si dispo).
+- **PER (P/E)** : prix / bénéfices.
+- **P/B** : prix / valeur comptable.
+- **EV/EBITDA** : valorisation vs profit opérationnel.
+- **ROE** : rentabilité des capitaux propres.
+- **Marge %** : profitabilité (si donnée dispo).
+- **Dette/Equity** : dette relative aux capitaux propres.
+- **Croissance CA %** : évolution du chiffre d’affaires (si donnée dispo).
 - **Div %** : rendement du dividende (si versé).
         """.strip()
     )
@@ -175,7 +171,7 @@ st.divider()
 # =====================================================
 # SETTINGS (ON PAGE)
 # =====================================================
-st.subheader("⚙️ Réglages (simple)")
+st.subheader("⚙️ Réglages")
 
 c1, c2, c3, c4 = st.columns([1.1, 1.1, 1.1, 1.1], gap="large")
 
@@ -254,7 +250,7 @@ else:
         f"Meilleur: {df['Score'].max():.1f}/100"
     )
 
-    st.markdown("## 🧩 Vue Cartes (plus lisible)")
+    st.markdown("## 🧩 Vue Cartes")
     top_n = int(st.session_state["top_n"])
 
     for r in results[:top_n]:
@@ -286,22 +282,11 @@ else:
 
         st.divider()
 
-    st.info("💬 Un retour rapide = énorme pour améliorer la bêta 🙏")
-    st.link_button("📝 Donner mon avis (2 minutes)", FEEDBACK_URL, use_container_width=True)
-
     # Collapsible email preview
     with st.expander("📩 Exemple d’email hebdo (Top 5) — cliquer pour afficher"):
         universe = build_universe()
         scanner = SmartValueScanner(universe) if universe else SmartValueScanner(DEFAULT_UNIVERSE)
         st.code(scanner.to_email_markdown(results, top_n=5), language="markdown")
-
-    csv_bytes = df.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        "⬇️ Télécharger CSV",
-        data=csv_bytes,
-        file_name="smartvalue_results_v3.csv",
-        mime="text/csv",
-    )
 
     # Collapsible table
     if st.session_state["show_table"]:
@@ -314,12 +299,25 @@ else:
             safe_cols = [c for c in cols if c in df.columns]
             st.dataframe(df[safe_cols].head(top_n), use_container_width=True)
 
+    # Export after table/email (less intrusive)
+    csv_bytes = df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        "⬇️ Télécharger au format tableur (Excel/CSV)",
+        data=csv_bytes,
+        file_name="smartvalue_results_v3.csv",
+        mime="text/csv",
+        use_container_width=True,
+    )
+
+    # Single feedback button only here (after scan, bottom)
+    st.divider()
+    st.markdown("### 💬 Feedback (Version Bêta)")
+    st.write("Ton avis m’aide énormément à améliorer SmartValue. Ça prend 2 minutes 🙏")
+    st.link_button("📝 Donner mon avis (2 minutes)", FEEDBACK_URL, use_container_width=True)
+
 
 # =====================================================
 # FOOTER
 # =====================================================
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
-st.write("### 💬 Feedback (Version Bêta)")
-st.write("Ton avis m’aide énormément à améliorer SmartValue. Ça prend 2 minutes 🙏")
-st.link_button("📝 Donner mon avis (2 minutes)", FEEDBACK_URL, use_container_width=True)
