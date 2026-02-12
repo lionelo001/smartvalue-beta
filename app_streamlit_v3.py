@@ -1,5 +1,8 @@
 # app_streamlit_v3.py
 # SmartValue Scanner d’Actions (V3) - One Page (no sidebar)
+# Email preview + table are collapsible (expanders)
+# Recommended is stricter (min_score=40, min_conf=70)
+# GA4 tracking via Measurement Protocol (reliable on Streamlit)
 
 from __future__ import annotations
 
@@ -36,6 +39,10 @@ def _ga_enabled() -> bool:
 
 
 def ga_event(event_name: str, params: dict | None = None) -> None:
+    """
+    Sends a GA4 event via Measurement Protocol.
+    Works even if scripts are blocked (Streamlit/iframes/adblock).
+    """
     if not _ga_enabled():
         return
 
@@ -63,9 +70,11 @@ def ga_event(event_name: str, params: dict | None = None) -> None:
     try:
         requests.post(url, json=payload, timeout=2)
     except Exception:
+        # Analytics must never break the app
         pass
 
 
+# Fire once per session open
 if "ga_open_sent" not in st.session_state:
     ga_event("app_open", {"app": "smartvalue_v3_onepage"})
     st.session_state["ga_open_sent"] = True
@@ -92,8 +101,9 @@ def init_state() -> None:
 
 
 def set_recommended() -> None:
-    st.session_state["min_score"] = 35
-    st.session_state["min_conf"] = 50
+    # Stricter recommended defaults (more professional)
+    st.session_state["min_score"] = 40
+    st.session_state["min_conf"] = 70
 
 
 def build_universe() -> Dict[str, List[str]]:
@@ -112,18 +122,17 @@ init_state()
 st.title("🔎 SmartValue Scanner d’Actions (V3)")
 st.caption("Scanner value long terme : score, confiance data, tags, résumé, explication simple.")
 
-col_a, col_b = st.columns([3, 1])
-with col_a:
+top_left, top_right = st.columns([3, 1], gap="large")
+with top_left:
     st.info(
         "🧪 Version BÊTA gratuite. Objectif : tester, améliorer, simplifier pour les investisseurs long terme. "
         "Vos retours sont précieux 🙏"
     )
-with col_b:
+with top_right:
     st.link_button("📝 Feedback (2 min)", FEEDBACK_URL, use_container_width=True)
 
-
 # =====================================================
-# AIDE + LEXIQUE
+# HELP + LEXICON
 # =====================================================
 with st.expander("📘 Aide rapide : Comment lire les résultats ?"):
     st.markdown(
@@ -160,12 +169,11 @@ with st.expander("📚 Lexique (abréviations)"):
         """.strip()
     )
 
-
 st.divider()
 
 
 # =====================================================
-# RÉGLAGES (ON PAGE)
+# SETTINGS (ON PAGE)
 # =====================================================
 st.subheader("⚙️ Réglages (simple)")
 
@@ -182,24 +190,28 @@ with c4:
     st.button("✨ Recommandé", on_click=set_recommended, use_container_width=True)
 
 st.markdown("### 🧩 Secteurs (coche/décoche)")
-# Checkboxes in a grid (more compact)
+
 sector_names = list(DEFAULT_UNIVERSE.keys())
-cols = st.columns(3)
+grid = st.columns(3, gap="large")
 for i, sector in enumerate(sector_names):
-    with cols[i % 3]:
+    with grid[i % 3]:
         current_val = st.session_state["sectors_selected"].get(sector, True)
-        st.session_state["sectors_selected"][sector] = st.checkbox(sector, value=current_val, key=f"sector_{sector}")
+        st.session_state["sectors_selected"][sector] = st.checkbox(
+            sector,
+            value=current_val,
+            key=f"sector_{sector}",
+        )
 
 st.divider()
 
-scan_col1, scan_col2, scan_col3 = st.columns([1, 1, 1])
-with scan_col2:
+scan_left, scan_mid, scan_right = st.columns([1, 1, 1], gap="large")
+with scan_mid:
     run = st.button("🚀 Lancer le scan", use_container_width=True)
 
 if run:
     ga_event("scan_click", {"app": "smartvalue_v3_onepage"})
-    universe = build_universe()
 
+    universe = build_universe()
     if not universe:
         st.error("Sélectionne au moins 1 secteur.")
         st.stop()
@@ -222,6 +234,7 @@ if run:
             "min_conf": int(st.session_state["min_conf"]),
         },
     )
+
 
 # =====================================================
 # RESULTS (always below, same page)
@@ -257,11 +270,16 @@ else:
         with col2:
             st.metric("Score", f"{r.get('Score', '—')}/100")
             st.metric("Confiance", f"{r.get('Confiance badge','')} {r.get('Confiance %','—')}%")
+
             st.write(f"**Prix:** {r.get('Prix','—')} {r.get('Devise','')}")
             per_val = r.get("PER", None)
             st.write(f"**PER:** {'—' if per_val is None or (isinstance(per_val, float) and pd.isna(per_val)) else per_val}")
+
             roe_val = r.get("ROE %", None)
-            st.write(f"**ROE:** {'—' if roe_val is None or (isinstance(roe_val, float) and pd.isna(roe_val)) else str(roe_val) + '%'}")
+            st.write(
+                f"**ROE:** {'—' if roe_val is None or (isinstance(roe_val, float) and pd.isna(roe_val)) else str(roe_val) + '%'}"
+            )
+
             st.write(f"**Dividende:** {r.get('Div affichage','—')}%")
             st.write(f"**Dette/Equity:** {r.get('Dette/Equity','—')}")
             st.write(f"**Croissance CA:** {r.get('Croissance CA %','—')}%")
@@ -271,11 +289,11 @@ else:
     st.info("💬 Un retour rapide = énorme pour améliorer la bêta 🙏")
     st.link_button("📝 Donner mon avis (2 minutes)", FEEDBACK_URL, use_container_width=True)
 
-    st.subheader("📩 Exemple d’email hebdo (Top 5)")
-    # Rebuild scanner for email formatting (or reuse if you kept reference)
-    universe = build_universe()
-    scanner = SmartValueScanner(universe) if universe else SmartValueScanner(DEFAULT_UNIVERSE)
-    st.code(scanner.to_email_markdown(results, top_n=5), language="markdown")
+    # Collapsible email preview
+    with st.expander("📩 Exemple d’email hebdo (Top 5) — cliquer pour afficher"):
+        universe = build_universe()
+        scanner = SmartValueScanner(universe) if universe else SmartValueScanner(DEFAULT_UNIVERSE)
+        st.code(scanner.to_email_markdown(results, top_n=5), language="markdown")
 
     csv_bytes = df.to_csv(index=False).encode("utf-8")
     st.download_button(
@@ -285,15 +303,16 @@ else:
         mime="text/csv",
     )
 
+    # Collapsible table
     if st.session_state["show_table"]:
-        st.subheader("📊 Tableau (comparaison rapide)")
-        cols = [
-            "Score", "Confiance %", "Ticker", "Société", "Secteur", "Prix", "Devise",
-            "PER", "P/B", "EV/EBITDA", "ROE %", "Marge %", "Dette/Equity",
-            "Div %", "Croissance CA %", "Tags", "Résumé", "Pourquoi"
-        ]
-        safe_cols = [c for c in cols if c in df.columns]
-        st.dataframe(df[safe_cols].head(top_n), use_container_width=True)
+        with st.expander("📊 Tableau comparatif — cliquer pour afficher"):
+            cols = [
+                "Score", "Confiance %", "Ticker", "Société", "Secteur", "Prix", "Devise",
+                "PER", "P/B", "EV/EBITDA", "ROE %", "Marge %", "Dette/Equity",
+                "Div %", "Croissance CA %", "Tags", "Résumé", "Pourquoi",
+            ]
+            safe_cols = [c for c in cols if c in df.columns]
+            st.dataframe(df[safe_cols].head(top_n), use_container_width=True)
 
 
 # =====================================================
