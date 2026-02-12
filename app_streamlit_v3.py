@@ -1,23 +1,25 @@
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
+
+st.set_page_config(
+    page_title="SmartValue Scanner d’Actions (V3)",
+    layout="wide"
+)
 
 GA_ID = "G-M4S6VSF3W5"
 
-components.html(
-    f"""
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
-      gtag('js', new Date());
-      gtag('config', '{GA_ID}');
-    </script>
-    """,
-    height=0,
-)
+# Injecte la balise Google dans la page (pas dans un iframe)
+st.html(f"""
+<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){{dataLayer.push(arguments);}}
+  gtag('js', new Date());
+  gtag('config', '{GA_ID}');
+</script>
+""")
 
+from scanner_core import SmartValueScanner, DEFAULT_UNIVERSE, SOFT_DISCLAIMER
 
 from scanner_core import SmartValueScanner, DEFAULT_UNIVERSE, SOFT_DISCLAIMER
 
@@ -330,6 +332,7 @@ else:
 # =====================================================
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
+
 
 
 
