@@ -1,5 +1,5 @@
 # app_streamlit_v3.py
-# SmartValue Scanner d’Actions (V3) - Streamlit App (clean + stable)
+# SmartValue Scanner d’Actions (V3) - One Page (no sidebar)
 
 from __future__ import annotations
 
@@ -14,12 +14,18 @@ from scanner_core import SmartValueScanner, DEFAULT_UNIVERSE, SOFT_DISCLAIMER
 
 
 # =====================================================
-# CONFIG APP (must be the first Streamlit call)
+# CONFIG (must be first Streamlit call)
 # =====================================================
 st.set_page_config(
     page_title="SmartValue Scanner d’Actions (V3)",
     layout="wide",
 )
+
+
+# =====================================================
+# CONSTANTS
+# =====================================================
+FEEDBACK_URL = "https://docs.google.com/forms/d/e/1FAIpQLSftKDyx2BZ0BnMgn6JOsDGYpNxK0YTqqKgXASrTlz2UfFwbvQ/viewform?usp=sharing&ouid=116329167308565311458"
 
 
 # =====================================================
@@ -30,14 +36,9 @@ def _ga_enabled() -> bool:
 
 
 def ga_event(event_name: str, params: dict | None = None) -> None:
-    """
-    Sends a GA4 event via Measurement Protocol.
-    Works even if scripts are blocked by Streamlit/iframes/adblock.
-    """
     if not _ga_enabled():
         return
 
-    # One client_id per session (so returning users can be estimated)
     if "ga_client_id" not in st.session_state:
         st.session_state["ga_client_id"] = str(uuid.uuid4())
 
@@ -62,22 +63,17 @@ def ga_event(event_name: str, params: dict | None = None) -> None:
     try:
         requests.post(url, json=payload, timeout=2)
     except Exception:
-        # Fail silently: analytics must never break the app
         pass
 
 
-# Fire once per session open
 if "ga_open_sent" not in st.session_state:
-    ga_event("app_open", {"app": "smartvalue_v3"})
+    ga_event("app_open", {"app": "smartvalue_v3_onepage"})
     st.session_state["ga_open_sent"] = True
 
 
 # =====================================================
-# UI HELPERS
+# STATE
 # =====================================================
-FEEDBACK_URL = "https://docs.google.com/forms/d/e/1FAIpQLSftKDyx2BZ0BnMgn6JOsDGYpNxK0YTqqKgXASrTlz2UfFwbvQ/viewform?usp=sharing&ouid=116329167308565311458"
-
-
 def init_state() -> None:
     if "min_score" not in st.session_state:
         st.session_state["min_score"] = 35
@@ -88,41 +84,57 @@ def init_state() -> None:
     if "show_table" not in st.session_state:
         st.session_state["show_table"] = True
 
-    # sectors as fixed checkboxes (persistent)
     if "sectors_selected" not in st.session_state:
         st.session_state["sectors_selected"] = {k: True for k in DEFAULT_UNIVERSE.keys()}
-
-    if "run_scan" not in st.session_state:
-        st.session_state["run_scan"] = False
 
     if "last_results" not in st.session_state:
         st.session_state["last_results"] = []
 
 
 def set_recommended() -> None:
-    # Recommended default values (always works)
     st.session_state["min_score"] = 35
     st.session_state["min_conf"] = 50
 
 
-def build_universe_from_state() -> Dict[str, List[str]]:
+def build_universe() -> Dict[str, List[str]]:
     chosen = [k for k, v in st.session_state["sectors_selected"].items() if v]
     if not chosen:
         return {}
     return {k: DEFAULT_UNIVERSE[k] for k in chosen}
 
 
-def render_help() -> None:
-    with st.expander("📘 Aide rapide (clique ici) : Comment lire les résultats ?"):
-        st.markdown(
-            """
+init_state()
+
+
+# =====================================================
+# HEADER
+# =====================================================
+st.title("🔎 SmartValue Scanner d’Actions (V3)")
+st.caption("Scanner value long terme : score, confiance data, tags, résumé, explication simple.")
+
+col_a, col_b = st.columns([3, 1])
+with col_a:
+    st.info(
+        "🧪 Version BÊTA gratuite. Objectif : tester, améliorer, simplifier pour les investisseurs long terme. "
+        "Vos retours sont précieux 🙏"
+    )
+with col_b:
+    st.link_button("📝 Feedback (2 min)", FEEDBACK_URL, use_container_width=True)
+
+
+# =====================================================
+# AIDE + LEXIQUE
+# =====================================================
+with st.expander("📘 Aide rapide : Comment lire les résultats ?"):
+    st.markdown(
+        """
 **Score**
 - Synthèse de plusieurs critères (valorisation, rentabilité, solidité, croissance).
 - Plus il est élevé, plus l’entreprise ressort selon ces critères.
 - Ce n’est **pas** un signal d’achat.
 
 **Confiance des données**
-- Indique la complétude / cohérence des données (qualité des champs récupérés).
+- Indique la complétude / cohérence des données.
 - Plus c’est haut, plus l’analyse est fiable.
 - Plus bas = à vérifier davantage.
 
@@ -131,84 +143,65 @@ def render_help() -> None:
 
 **Important**
 - Résultats indicatifs, à compléter avec vos recherches.
-            """.strip()
-        )
+        """.strip()
+    )
+
+with st.expander("📚 Lexique (abréviations)"):
+    st.markdown(
+        """
+- **PER (P/E)** : prix / bénéfices. Plus bas = potentiellement moins cher, mais dépend du secteur.
+- **P/B** : prix / valeur comptable. Utile pour banques, industrielles, etc.
+- **EV/EBITDA** : valorisation vs profit opérationnel. Souvent utile pour comparer des entreprises.
+- **ROE** : rentabilité des capitaux propres. Plus haut = business efficace (à contextualiser).
+- **Marge %** : profitabilité (selon données dispo).
+- **Dette/Equity** : dette relative aux capitaux propres. Plus bas = bilan plus sain.
+- **Croissance CA %** : évolution du chiffre d’affaires (si dispo).
+- **Div %** : rendement du dividende (si versé).
+        """.strip()
+    )
+
+
+st.divider()
 
 
 # =====================================================
-# APP
+# RÉGLAGES (ON PAGE)
 # =====================================================
-init_state()
+st.subheader("⚙️ Réglages (simple)")
 
-st.title("🔎 SmartValue Scanner d’Actions (V3)")
-st.caption("👀 Nouveau ? Clique juste ici pour une explication rapide 👇")
-render_help()
+c1, c2, c3, c4 = st.columns([1.1, 1.1, 1.1, 1.1], gap="large")
 
-st.info(
-    "🧪 Version BÊTA gratuite. Objectif : tester, améliorer, simplifier pour les investisseurs long terme. "
-    "Vos retours sont précieux 🙏"
-)
-
-
-# -------------------------
-# SIDEBAR SETTINGS
-# -------------------------
-with st.sidebar:
-    st.header("⚙️ Réglages")
-
-    # Recommended button always works
+with c1:
+    st.slider("Score minimum", 0, 100, int(st.session_state["min_score"]), 1, key="min_score")
+with c2:
+    st.slider("Confiance data minimum (%)", 0, 100, int(st.session_state["min_conf"]), 5, key="min_conf")
+with c3:
+    st.slider("Nombre d'actions affichées", 5, 50, int(st.session_state["top_n"]), 1, key="top_n")
+with c4:
+    st.checkbox("Afficher aussi le tableau", value=bool(st.session_state["show_table"]), key="show_table")
     st.button("✨ Recommandé", on_click=set_recommended, use_container_width=True)
 
-    st.slider(
-        "Score minimum",
-        min_value=0,
-        max_value=100,
-        value=int(st.session_state["min_score"]),
-        step=1,
-        key="min_score",
-    )
-    st.slider(
-        "Confiance data minimum (%)",
-        min_value=0,
-        max_value=100,
-        value=int(st.session_state["min_conf"]),
-        step=5,
-        key="min_conf",
-    )
-
-    st.subheader("Secteurs")
-    # fixed list of checkboxes (no disappearing)
-    for sector in DEFAULT_UNIVERSE.keys():
-        key = f"sector_{sector}"
+st.markdown("### 🧩 Secteurs (coche/décoche)")
+# Checkboxes in a grid (more compact)
+sector_names = list(DEFAULT_UNIVERSE.keys())
+cols = st.columns(3)
+for i, sector in enumerate(sector_names):
+    with cols[i % 3]:
         current_val = st.session_state["sectors_selected"].get(sector, True)
+        st.session_state["sectors_selected"][sector] = st.checkbox(sector, value=current_val, key=f"sector_{sector}")
 
-        new_val = st.checkbox(sector, value=current_val, key=key)
-        st.session_state["sectors_selected"][sector] = new_val
+st.divider()
 
-    st.slider(
-        "Nombre d'actions affichées",
-        min_value=5,
-        max_value=50,
-        value=int(st.session_state["top_n"]),
-        step=1,
-        key="top_n",
-    )
+scan_col1, scan_col2, scan_col3 = st.columns([1, 1, 1])
+with scan_col2:
+    run = st.button("🚀 Lancer le scan", use_container_width=True)
 
-    st.checkbox("Afficher aussi le tableau", value=bool(st.session_state["show_table"]), key="show_table")
+if run:
+    ga_event("scan_click", {"app": "smartvalue_v3_onepage"})
+    universe = build_universe()
 
-    st.divider()
-    if st.button("🚀 Lancer le scan", use_container_width=True):
-        st.session_state["run_scan"] = True
-        ga_event("scan_click", {"app": "smartvalue_v3"})
-
-
-# -------------------------
-# MAIN - SCAN
-# -------------------------
-if st.session_state["run_scan"]:
-    universe = build_universe_from_state()
     if not universe:
-        st.error("Sélectionne au moins 1 secteur dans les réglages (sidebar).")
+        st.error("Sélectionne au moins 1 secteur.")
         st.stop()
 
     scanner = SmartValueScanner(universe)
@@ -220,24 +213,27 @@ if st.session_state["run_scan"]:
         )
 
     st.session_state["last_results"] = results
-    st.session_state["run_scan"] = False  # reset
-
-    if not results:
-        st.error("Aucune opportunité ne passe les filtres actuels.")
-        st.info(SOFT_DISCLAIMER)
-        st.link_button("📝 Donner mon avis (2 minutes)", FEEDBACK_URL)
-        st.stop()
-
-    df = pd.DataFrame(results).sort_values("Score", ascending=False).reset_index(drop=True)
 
     ga_event(
         "scan_done",
         {
-            "results_count": int(len(df)),
+            "results_count": int(len(results)),
             "min_score": int(st.session_state["min_score"]),
             "min_conf": int(st.session_state["min_conf"]),
         },
     )
+
+# =====================================================
+# RESULTS (always below, same page)
+# =====================================================
+results = st.session_state.get("last_results", [])
+
+st.subheader("📊 Résultats")
+
+if not results:
+    st.warning("Lance un scan pour afficher les résultats.")
+else:
+    df = pd.DataFrame(results).sort_values("Score", ascending=False).reset_index(drop=True)
 
     st.success(
         f"Opportunités: {len(df)} | "
@@ -245,8 +241,9 @@ if st.session_state["run_scan"]:
         f"Meilleur: {df['Score'].max():.1f}/100"
     )
 
-    st.subheader("🧩 Vue Cartes (plus lisible)")
+    st.markdown("## 🧩 Vue Cartes (plus lisible)")
     top_n = int(st.session_state["top_n"])
+
     for r in results[:top_n]:
         col1, col2 = st.columns([3, 2], gap="large")
 
@@ -271,11 +268,13 @@ if st.session_state["run_scan"]:
 
         st.divider()
 
-    # Feedback button visible AFTER scan
     st.info("💬 Un retour rapide = énorme pour améliorer la bêta 🙏")
-    st.link_button("📝 Donner mon avis (2 minutes)", FEEDBACK_URL)
+    st.link_button("📝 Donner mon avis (2 minutes)", FEEDBACK_URL, use_container_width=True)
 
     st.subheader("📩 Exemple d’email hebdo (Top 5)")
+    # Rebuild scanner for email formatting (or reuse if you kept reference)
+    universe = build_universe()
+    scanner = SmartValueScanner(universe) if universe else SmartValueScanner(DEFAULT_UNIVERSE)
     st.code(scanner.to_email_markdown(results, top_n=5), language="markdown")
 
     csv_bytes = df.to_csv(index=False).encode("utf-8")
@@ -297,11 +296,11 @@ if st.session_state["run_scan"]:
         st.dataframe(df[safe_cols].head(top_n), use_container_width=True)
 
 
-# -------------------------
+# =====================================================
 # FOOTER
-# -------------------------
+# =====================================================
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
 st.write("### 💬 Feedback (Version Bêta)")
 st.write("Ton avis m’aide énormément à améliorer SmartValue. Ça prend 2 minutes 🙏")
-st.link_button("📝 Donner mon avis (2 minutes)", FEEDBACK_URL)
+st.link_button("📝 Donner mon avis (2 minutes)", FEEDBACK_URL, use_container_width=True)
