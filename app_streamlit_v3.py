@@ -1,5 +1,21 @@
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
+
+GA_ID = "G-M4S6VSF3W5"  # Remplace par ton vrai ID
+
+ga_script = f"""
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){{dataLayer.push(arguments);}}
+gtag('js', new Date());
+gtag('config', '{GA_ID}');
+</script>
+"""
+
+components.html(ga_script, height=0)
 
 from scanner_core import SmartValueScanner, DEFAULT_UNIVERSE, SOFT_DISCLAIMER
 
@@ -312,4 +328,5 @@ else:
 # =====================================================
 st.markdown("---")
 st.info(SOFT_DISCLAIMER)
+
 
