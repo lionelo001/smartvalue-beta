@@ -1,7 +1,8 @@
 # app_streamlit_v3.py
 # SmartValue Scanner d’Actions (V3) - One Page (no sidebar)
 # Email preview + table are collapsible (expanders)
-# Recommended stricter (min_score=40, min_conf=70)
+# Recommended button near "Réglages" + toast
+# Tags translated for francophones (UI + email + export)
 # GA4 tracking via Measurement Protocol (reliable on Streamlit)
 
 from __future__ import annotations
@@ -32,6 +33,40 @@ FEEDBACK_URL = "https://docs.google.com/forms/d/e/1FAIpQLSftKDyx2BZ0BnMgn6JOsDGY
 
 
 # =====================================================
+# TAGS TRANSLATION
+# =====================================================
+TAG_MAP = {
+    "GROWTH": "CROISSANCE",
+    "QUALITY": "QUALITÉ",
+    "SAFE": "SÛR",
+    "DIVIDEND": "DIVIDENDE",
+    "ASSET": "ACTIFS",
+    "VALUE": "VALUE",  # OK en FR (et connu)
+    "DATA_CHECK": "VÉRIF. DONNÉES",
+}
+
+
+def translate_text(s: str) -> str:
+    """Replace English tags/keywords inside a string."""
+    if not isinstance(s, str) or not s.strip():
+        return s
+    out = s
+    # Replace longer tokens first to avoid partial weirdness
+    for k, v in TAG_MAP.items():
+        out = out.replace(k, v)
+    return out
+
+
+def translate_tags_field(tags_field) -> str:
+    """Translate a tags field that may be a string like 'QUALITY, SAFE, GROWTH'."""
+    if tags_field is None:
+        return ""
+    if isinstance(tags_field, float) and pd.isna(tags_field):
+        return ""
+    return translate_text(str(tags_field))
+
+
+# =====================================================
 # GA4 (Measurement Protocol) - reliable on Streamlit
 # =====================================================
 def _ga_enabled() -> bool:
@@ -39,10 +74,7 @@ def _ga_enabled() -> bool:
 
 
 def ga_event(event_name: str, params: dict | None = None) -> None:
-    """
-    Sends a GA4 event via Measurement Protocol.
-    Works even if scripts are blocked (Streamlit/iframes/adblock).
-    """
+    """Send a GA4 event via Measurement Protocol."""
     if not _ga_enabled():
         return
 
@@ -59,22 +91,15 @@ def ga_event(event_name: str, params: dict | None = None) -> None:
 
     payload = {
         "client_id": st.session_state["ga_client_id"],
-        "events": [
-            {
-                "name": event_name,
-                "params": params or {},
-            }
-        ],
+        "events": [{"name": event_name, "params": params or {}}],
     }
 
     try:
         requests.post(url, json=payload, timeout=2)
     except Exception:
-        # Analytics must never break the app
         pass
 
 
-# Fire once per session open
 if "ga_open_sent" not in st.session_state:
     ga_event("app_open", {"app": "smartvalue_v3_onepage"})
     st.session_state["ga_open_sent"] = True
@@ -90,8 +115,6 @@ def init_state() -> None:
         st.session_state["min_conf"] = 50
     if "top_n" not in st.session_state:
         st.session_state["top_n"] = 15
-    if "show_table" not in st.session_state:
-        st.session_state["show_table"] = True
 
     if "sectors_selected" not in st.session_state:
         st.session_state["sectors_selected"] = {k: True for k in DEFAULT_UNIVERSE.keys()}
@@ -99,11 +122,15 @@ def init_state() -> None:
     if "last_results" not in st.session_state:
         st.session_state["last_results"] = []
 
+    if "recommended_just_applied" not in st.session_state:
+        st.session_state["recommended_just_applied"] = False
+
 
 def set_recommended() -> None:
-    # Stricter recommended defaults (more professional)
+    # Stricter defaults (more pro)
     st.session_state["min_score"] = 40
     st.session_state["min_conf"] = 70
+    st.session_state["recommended_just_applied"] = True
 
 
 def build_universe() -> Dict[str, List[str]]:
@@ -144,7 +171,7 @@ with st.expander("📘 Aide rapide : Comment lire les résultats ?"):
 - Plus bas = à vérifier davantage.
 
 **Tags**
-- Résument le profil (VALUE, QUALITY, SAFE, GROWTH, DIVIDEND…).
+- Résument le profil (VALUE, QUALITÉ, SÛR, CROISSANCE, DIVIDENDE…).
 
 **Important**
 - Résultats indicatifs, à compléter avec vos recherches.
@@ -171,19 +198,24 @@ st.divider()
 # =====================================================
 # SETTINGS (ON PAGE)
 # =====================================================
-st.subheader("⚙️ Réglages")
+header_left, header_right = st.columns([3, 1])
+with header_left:
+    st.subheader("⚙️ Réglages")
+with header_right:
+    st.button("✨ Recommandé", on_click=set_recommended, use_container_width=True)
 
-c1, c2, c3, c4 = st.columns([1.1, 1.1, 1.1, 1.1], gap="large")
+# Toast after recommended is applied
+if st.session_state.get("recommended_just_applied"):
+    st.toast("Réglages recommandés appliqués ✅", icon="✅")
+    st.session_state["recommended_just_applied"] = False
 
+c1, c2, c3 = st.columns([1.1, 1.1, 1.1], gap="large")
 with c1:
     st.slider("Score minimum", 0, 100, int(st.session_state["min_score"]), 1, key="min_score")
 with c2:
     st.slider("Confiance data minimum (%)", 0, 100, int(st.session_state["min_conf"]), 5, key="min_conf")
 with c3:
     st.slider("Nombre d'actions affichées", 5, 50, int(st.session_state["top_n"]), 1, key="top_n")
-with c4:
-    st.checkbox("Afficher aussi le tableau", value=bool(st.session_state["show_table"]), key="show_table")
-    st.button("✨ Recommandé", on_click=set_recommended, use_container_width=True)
 
 st.markdown("### 🧩 Secteurs (coche/décoche)")
 
@@ -242,7 +274,12 @@ st.subheader("📊 Résultats")
 if not results:
     st.warning("Lance un scan pour afficher les résultats.")
 else:
+    # Build dataframe
     df = pd.DataFrame(results).sort_values("Score", ascending=False).reset_index(drop=True)
+
+    # Translate tags in df for display + export
+    if "Tags" in df.columns:
+        df["Tags"] = df["Tags"].apply(translate_tags_field)
 
     st.success(
         f"Opportunités: {len(df)} | "
@@ -253,53 +290,54 @@ else:
     st.markdown("## 🧩 Vue Cartes")
     top_n = int(st.session_state["top_n"])
 
+    # Also translate tags for cards without mutating original dicts
     for r in results[:top_n]:
         col1, col2 = st.columns([3, 2], gap="large")
+
+        tags_fr = translate_tags_field(r.get("Tags", ""))
 
         with col1:
             st.markdown(f"### {r.get('Score badge','')} {r.get('Ticker','')} - {r.get('Société','')}")
             st.write(f"**Secteur:** {r.get('Secteur','')}")
-            st.write(f"**Résumé:** {r.get('Résumé','')}")
-            st.write(f"**Pourquoi:** {r.get('Pourquoi','')}")
-            st.write(f"**Tags:** {r.get('Tags','')}")
+            st.write(f"**Résumé:** {translate_text(r.get('Résumé',''))}")
+            st.write(f"**Pourquoi:** {translate_text(r.get('Pourquoi',''))}")
+            st.write(f"**Tags:** {tags_fr}")
 
         with col2:
             st.metric("Score", f"{r.get('Score', '—')}/100")
             st.metric("Confiance", f"{r.get('Confiance badge','')} {r.get('Confiance %','—')}%")
-
             st.write(f"**Prix:** {r.get('Prix','—')} {r.get('Devise','')}")
             per_val = r.get("PER", None)
             st.write(f"**PER:** {'—' if per_val is None or (isinstance(per_val, float) and pd.isna(per_val)) else per_val}")
-
             roe_val = r.get("ROE %", None)
             st.write(
                 f"**ROE:** {'—' if roe_val is None or (isinstance(roe_val, float) and pd.isna(roe_val)) else str(roe_val) + '%'}"
             )
-
             st.write(f"**Dividende:** {r.get('Div affichage','—')}%")
             st.write(f"**Dette/Equity:** {r.get('Dette/Equity','—')}")
             st.write(f"**Croissance CA:** {r.get('Croissance CA %','—')}%")
 
         st.divider()
 
-    # Collapsible email preview
+    # Collapsible email preview (translated)
     with st.expander("📩 Exemple d’email hebdo (Top 5) — cliquer pour afficher"):
         universe = build_universe()
         scanner = SmartValueScanner(universe) if universe else SmartValueScanner(DEFAULT_UNIVERSE)
-        st.code(scanner.to_email_markdown(results, top_n=5), language="markdown")
+        email_md = scanner.to_email_markdown(results, top_n=5)
+        email_md = translate_text(email_md)
+        st.code(email_md, language="markdown")
 
-    # Collapsible table
-    if st.session_state["show_table"]:
-        with st.expander("📊 Tableau comparatif — cliquer pour afficher"):
-            cols = [
-                "Score", "Confiance %", "Ticker", "Société", "Secteur", "Prix", "Devise",
-                "PER", "P/B", "EV/EBITDA", "ROE %", "Marge %", "Dette/Equity",
-                "Div %", "Croissance CA %", "Tags", "Résumé", "Pourquoi",
-            ]
-            safe_cols = [c for c in cols if c in df.columns]
-            st.dataframe(df[safe_cols].head(top_n), use_container_width=True)
+    # Collapsible table (always available)
+    with st.expander("📊 Tableau comparatif — cliquer pour afficher"):
+        cols = [
+            "Score", "Confiance %", "Ticker", "Société", "Secteur", "Prix", "Devise",
+            "PER", "P/B", "EV/EBITDA", "ROE %", "Marge %", "Dette/Equity",
+            "Div %", "Croissance CA %", "Tags", "Résumé", "Pourquoi",
+        ]
+        safe_cols = [c for c in cols if c in df.columns]
+        st.dataframe(df[safe_cols].head(top_n), use_container_width=True)
 
-    # Export after table/email (less intrusive)
+    # Export after table/email (with French tags)
     csv_bytes = df.to_csv(index=False).encode("utf-8")
     st.download_button(
         "⬇️ Télécharger au format tableur (Excel/CSV)",
