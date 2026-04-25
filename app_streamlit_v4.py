@@ -406,16 +406,15 @@ with right_col:
         best_score = df["Score"].max()
         avg_conf = df["Confiance %"].mean()
 
-        # Topbar + stats
-        st.markdown(f"""
-        {BASE_CSS}
-        <div style="background:#0F1012;border:1px solid rgba(255,255,255,0.06);margin-bottom:1px;">
+        # Topbar + stats + cartes — tout en components.html
+        full_html = f"""{BASE_CSS}
+        <div style="background:#0F1012;border:1px solid rgba(255,255,255,0.06);margin-bottom:8px;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:0.9rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">
             <div style="display:flex;align-items:center;gap:10px;">
-              <span style="font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;">Résultats</span>
-              <span style="background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.2);color:#C8F135;font-size:0.58rem;font-family:'DM Mono',monospace;letter-spacing:0.06em;padding:0.2rem 0.5rem;">FMP · LIVE</span>
+              <span style="font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;color:#ECEEF2;">Résultats</span>
+              <span style="background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.2);color:#C8F135;font-size:0.58rem;font-family:DM Mono,monospace;letter-spacing:0.06em;padding:0.2rem 0.5rem;">FMP · LIVE</span>
             </div>
-            <span style="font-size:0.65rem;color:#5A5F6B;font-family:'DM Mono',monospace;">Trié par score · {len(results)} résultats</span>
+            <span style="font-size:0.65rem;color:#5A5F6B;font-family:DM Mono,monospace;">Trié par score · {len(results)} résultats</span>
           </div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,0.06);">
             {_stat(len(results), "Opportunités")}
@@ -423,15 +422,10 @@ with right_col:
             {_stat(f"{best_score:.1f}", "Meilleur")}
             {_stat(f"{avg_conf:.0f}%", "Confiance moy.")}
           </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Cartes résultats
-        cards_html = f"{BASE_CSS}"
+        </div>"""
         for i, r in enumerate(results[:top_n], 1):
-            cards_html += render_card(r, i)
-
-        components.html(cards_html, height=min(len(results[:top_n]) * 230 + 20, 4000), scrolling=True)
+            full_html += render_card(r, i)
+        components.html(full_html, height=min(len(results[:top_n]) * 240 + 160, 5000), scrolling=True)
 
         # Export + tableau
         col_a, col_b = st.columns(2)
@@ -458,15 +452,13 @@ with right_col:
             st.code(sc2.to_email_markdown(results, top_n=5), language="markdown")
 
     else:
-        # Empty state
-        st.markdown(f"""
-        {BASE_CSS}
+        components.html(f"""{BASE_CSS}
         <div style="background:#0F1012;border:1px solid rgba(255,255,255,0.06);padding:5rem 2rem;text-align:center;">
-          <div style="font-family:'DM Mono',monospace;font-size:2.5rem;color:rgba(200,241,53,0.15);margin-bottom:1.5rem;">⟨/⟩</div>
-          <div style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:#8A8F9B;margin-bottom:0.5rem;">Prêt à analyser</div>
-          <div style="font-size:0.82rem;color:#5A5F6B;line-height:1.6;">Configure tes filtres et secteurs,<br>puis lance le scan pour voir les résultats.</div>
+          <div style="font-family:DM Mono,monospace;font-size:2.5rem;color:rgba(200,241,53,0.12);margin-bottom:1.5rem;">&lt;/&gt;</div>
+          <div style="font-family:Syne,sans-serif;font-size:1rem;font-weight:700;color:#8A8F9B;margin-bottom:0.5rem;">Prêt à analyser</div>
+          <div style="font-size:0.82rem;color:#5A5F6B;line-height:1.6;">Configure tes filtres et secteurs, puis lance le scan pour voir les résultats.</div>
         </div>
-        """, unsafe_allow_html=True)
+        """, height=260)
 
 # ─────────────────────────────────────────────────────────────
 # FOOTER
