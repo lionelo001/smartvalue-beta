@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartValue Scanner — Analysez les actions avec clarté</title>
+  <meta name="description" content="SmartValue Scanner condense les indicateurs fondamentaux essentiels pour vous aider à structurer vos décisions d'investissement.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0A0B0E;
+      --bg2: #111318;
+      --bg3: #181B22;
+      --accent: #C8F135;
+      --accent2: #8BDE0F;
+      --text: #F0F2F5;
+      --muted: #7A8090;
+      --border: rgba(255,255,255,0.07);
+      --card: rgba(255,255,255,0.04);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 3rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(10,11,14,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .logo span { color: var(--accent); }
+    .nav-cta {
+      background: var(--accent);
+      color: #0A0B0E;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      padding: 0.55rem 1.2rem;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .nav-cta:hover { background: var(--accent2); }
+
+    /* HERO */
+    .hero {
+      padding: 7rem 3rem 5rem;
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+    }
+    .grid-accent {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 450px;
+      opacity: 0.03;
+      pointer-events: none;
+      background-image: linear-gradient(var(--border) 1px, transparent 1px),
+                        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 0.4rem 1rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 2.5rem;
+    }
+    .hero-badge-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.8rem, 7vw, 5rem);
+      font-weight: 800;
+      line-height: 1.0;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.8rem;
+    }
+    h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .hero-sub {
+      font-size: 1.1rem;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+      font-weight: 300;
+    }
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #0A0B0E;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      padding: 0.9rem 2rem;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-weight: 500;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      padding: 0.9rem 2rem;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: border-color 0.15s;
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.25); }
+
+    /* STATS */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stat {
+      background: var(--bg);
+      padding: 2rem 3rem;
+      text-align: center;
+    }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.03em;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* SECTIONS */
+    .section {
+      padding: 5rem 3rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .section-label {
+      font-size: 0.72rem;
+      color: var(--accent);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+    h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+    .section-sub {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      max-width: 480px;
+      font-weight: 300;
+    }
+
+    /* PROBLEM GRID */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      margin-top: 3rem;
+      border: 1px solid var(--border);
+    }
+    .problem-item {
+      background: var(--bg);
+      padding: 2rem 2.5rem;
+    }
+    .problem-item:nth-child(odd) { background: var(--bg2); }
+    .problem-icon { font-size: 1.4rem; margin-bottom: 1rem; }
+    .problem-item h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .problem-item p {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* HOW STEPS */
+    .how-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .step {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 2rem;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .step:hover { border-color: rgba(200,241,53,0.25); }
+    .step-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      color: rgba(200,241,53,0.12);
+      line-height: 1;
+      margin-bottom: 1.2rem;
+    }
+    .step h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .step p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+    .step-accent {
+      width: 2px;
+      height: 40px;
+      background: var(--accent);
+      position: absolute;
+      top: 0;
+      left: 2rem;
+    }
+
+    /* FOR WHO */
+    .for-who {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 5rem 3rem;
+    }
+    .for-who-inner { max-width: 1000px; margin: 0 auto; }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 2.5rem;
+    }
+    .tag {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 0.6rem 1.2rem;
+      font-size: 0.82rem;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+    }
+    .tag.active {
+      background: rgba(200,241,53,0.08);
+      border-color: rgba(200,241,53,0.35);
+      color: var(--accent);
+    }
+
+    /* CTA SECTION */
+    .cta-section {
+      padding: 7rem 3rem;
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .cta-section h2 { font-size: clamp(2rem, 5vw, 3.2rem); margin-bottom: 1.2rem; }
+    .cta-section p { color: var(--muted); margin-bottom: 2.5rem; font-size: 0.95rem; line-height: 1.7; }
+
+    /* DISCLAIMER */
+    .disclaimer {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem 3rem;
+      border-top: 1px solid var(--border);
+    }
+    .disclaimer p { font-size: 0.78rem; color: var(--muted); line-height: 1.7; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .footer-logo span { color: var(--accent); }
+    .footer-right { font-size: 0.75rem; color: var(--muted); }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      nav { padding: 1.2rem 1.5rem; }
+      .hero { padding: 4rem 1.5rem 3rem; }
+      .stats { grid-template-columns: 1fr; }
+      .stat { padding: 1.5rem; }
+      .section { padding: 3.5rem 1.5rem; }
+      .problem-grid { grid-template-columns: 1fr; }
+      .how-steps { grid-template-columns: 1fr; }
+      .for-who { padding: 3.5rem 1.5rem; }
+      .cta-section { padding: 4rem 1.5rem; }
+      footer { flex-direction: column; gap: 0.75rem; text-align: center; padding: 1.5rem; }
+      .disclaimer { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="#" class="logo">Smart<span>Value</span> Scanner</a>
+    <a href="https://smartvalue-beta-p37ktcxdfgpdg4xavamd3h.streamlit.app/#smart-value-scanner-v3" class="nav-cta" target="_blank" rel="noopener">Accéder gratuitement</a>
+  </nav>
+
+  <section class="hero">
+    <div class="grid-accent"></div>
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Analyse fondamentale · Accès gratuit
+    </div>
+    <h1>Investir avec <em>clarté,</em><br>pas avec bruit.</h1>
+    <p class="hero-sub">SmartValue Scanner condense les indicateurs fondamentaux essentiels pour vous aider à structurer vos décisions — sans vous noyer dans les données.</p>
+    <div class="hero-actions">
+      <a href="https://smartvalue-beta-p37ktcxdfgpdg4xavamd3h.streamlit.app/#smart-value-scanner-v3" class="btn-primary" target="_blank" rel="noopener">Lancer le scanner →</a>
+      <a href="#how" class="btn-ghost">Comment ça fonctionne</a>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num">100+</div>
+      <div class="stat-label">Entreprises analysables</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">3</div>
+      <div class="stat-label">Étapes simples</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">0€</div>
+      <div class="stat-label">Pour commencer</div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-label">Le problème</div>
+    <h2>Investir est devenu<br>un sport de données.</h2>
+    <p class="section-sub">Des dizaines d'indicateurs, des heures de recherche, et au final — toujours autant d'incertitude.</p>
+    <div class="problem-grid">
+      <div class="problem-item">
+        <div class="problem-icon">⚡</div>
+        <h3>Trop d'indicateurs</h3>
+        <p>P/E, P/B, EV/EBITDA, ROE, dette nette... difficile de savoir lesquels comptent vraiment.</p>
+      </div>
+      <div class="problem-item">
+        <div class="problem-icon">🌐</div>
+        <h3>Sources dispersées</h3>
+        <p>Les données sont partout, rarement cohérentes, souvent difficiles à comparer entre entreprises.</p>
+      </div>
+      <div class="problem-item">
+        <div class="problem-icon">⏳</div>
+        <h3>Temps limité</h3>
+        <p>Une analyse sérieuse prend des heures. La plupart des investisseurs n'ont pas ce luxe.</p>
+      </div>
+      <div class="problem-item">
+        <div class="problem-icon">🎯</div>
+        <h3>Manque de recul</h3>
+        <p>Sans cadre structuré, on oscille entre deux extrêmes : sur-analyser ou agir trop vite.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <div class="section-label">Comment ça fonctionne</div>
+    <h2>Trois étapes.<br>Une décision plus claire.</h2>
+    <p class="section-sub">SmartValue ne remplace pas votre jugement — il le structure.</p>
+    <div class="how-steps">
+      <div class="step">
+        <div class="step-accent"></div>
+        <div class="step-num">01</div>
+        <h3>Choisissez vos critères</h3>
+        <p>Sélectionnez les indicateurs fondamentaux qui correspondent à votre stratégie d'investissement.</p>
+      </div>
+      <div class="step">
+        <div class="step-accent"></div>
+        <div class="step-num">02</div>
+        <h3>Lancez le scan</h3>
+        <p>L'outil filtre automatiquement les entreprises qui correspondent à vos paramètres.</p>
+      </div>
+      <div class="step">
+        <div class="step-accent"></div>
+        <div class="step-num">03</div>
+        <h3>Analysez les résultats</h3>
+        <p>Obtenez une vue structurée et comparative — prête pour approfondir votre due diligence.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="for-who">
+    <div class="for-who-inner">
+      <div class="section-label">Pour qui ?</div>
+      <h2>Pensé pour l'investisseur long terme.</h2>
+      <p class="section-sub">Pas un outil de trading. Pas de signaux automatiques. Une aide à la réflexion, rigoureuse et sobre.</p>
+      <div class="tags">
+        <div class="tag active">Investisseurs particuliers</div>
+        <div class="tag">Approche value</div>
+        <div class="tag">Investissement long terme</div>
+        <div class="tag">Débutants sérieux</div>
+        <div class="tag">Analyse fondamentale</div>
+        <div class="tag">Sans abonnement payant</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <div class="section-label">Commencer maintenant</div>
+    <h2>Votre prochaine analyse vous attend.</h2>
+    <p>Accès gratuit. Aucune inscription requise.<br>Lancez votre premier scan en moins de 2 minutes.</p>
+    <a href="https://smartvalue-beta-p37ktcxdfgpdg4xavamd3h.streamlit.app/#smart-value-scanner-v3" class="btn-primary" target="_blank" rel="noopener">Accéder au scanner gratuitement →</a>
+  </section>
+
+  <div class="disclaimer">
+    <p>SmartValue Scanner est un outil d'aide à l'analyse. Il ne fournit pas de conseils financiers personnalisés. Toute décision d'investissement reste sous la responsabilité exclusive de l'utilisateur. Les performances passées ne préjugent pas des performances futures.</p>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Smart<span>Value</span> Scanner</div>
+    <div class="footer-right">© 2025 · Outil d'analyse fondamentale gratuit</div>
+  </footer>
+
+</body>
+</html>
